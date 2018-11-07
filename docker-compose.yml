@@ -4,11 +4,11 @@ services:
     image:          antidotedb/antidote
     container_name: antidote1
     hostname:       antidote1
-    volumes:
-      - .:/code
     environment:
       SHORT_NAME:   "true"
       NODE_NAME:    antidote@antidote1
+    volumes:
+      - .:/code
   antidote2:
     image:          antidotedb/antidote
     container_name: antidote2
@@ -16,6 +16,8 @@ services:
     environment:
       SHORT_NAME:   "true"
       NODE_NAME:    antidote@antidote2
+    volumes:
+      - .:/code
   antidote3:
     image:          antidotedb/antidote
     container_name: antidote3
@@ -23,3 +25,5 @@ services:
     environment:
       SHORT_NAME:   "true"
       NODE_NAME:    antidote@antidote3
+    volumes:
+      - .:/code
