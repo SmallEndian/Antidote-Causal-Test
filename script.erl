@@ -1,49 +1,39 @@
 #!/usr/bin/env escript
 %%! -smp enable -sname erlshell -setcookie antidote
 
+client(Transactions) ->
+	Count = length(Transactions),
+	io:format(user, "I'a a client with ~p transactions ~n", [Count]),
+	lists:map(fun(E) ->
+			       Count = length(E),
+			       io:format(user, "I'a a transaction with ~p operations ~n", [Count])
+	       end, Transactions),
+	ok.
 
 main(Args) ->
 	io:format("I was called with ~p ~n", [Args]),
 	[Filename] = Args,
-	Ops = file_to_ops(Filename),
-	Ops2 = split(Ops),
-	print_list(Ops2),
-	print_list(Ops),
-	io:format("~p~n", [Ops]),
-	io:format("~p~n", [Ops2]),
-	Ops3 = client_list(Ops),
-	io:format("~p~n", [Ops3]),
+	Content = file_to_ops(Filename),
+	%Operations = client_list(Content),
+	lists:map(fun(E) -> 
+		 spawn(fun() -> 
+				       client(E) end) 
+		  end ,Content),
 
+	timer:sleep(1000),
 	ok.
 
-file_to_ops(Filename) ->
-	{ok, Binary} = file:read_file(Filename),
-	{ok, C2, _} = erl_scan:string(unicode:characters_to_list(Binary)),
-	%% With a fun, because escript doesn't seem to like higer order functions
-	transform(lists:filter(fun(E) -> find(E) end, C2))
-	.
-% Split the sessions from the list.
-split(L) -> split(L, [], []).
-split([], Acc, Cur) -> Acc++Cur;
-split([ {']', _} | R ], Acc, Cur) -> 
-	case Cur of
-		[] -> split(R, Acc, []);
-		_ ->split(R, Acc++[Cur], [])
-	end;
-split([ {'[', _} | R ], Cur,  Acc) -> 
-	case Cur of
-		[] -> split(R, Acc, []);
-		_ ->split(R, Acc++[Cur], [])
-	end;
-split([ E | R ], Acc, Cur) -> 
-	split(R, Acc, Cur++[E])
-	.
+%%%% Client
 
-%% This is not generic, but it's very simple to implement:
+
+
+
+%% This is not generic, but it was very simple to implement:
 %% Three levels of depth in the section: all, clients, sessions
-
+%% This'll create a list of lists of lists that we'll be able give or client so that they may reproduce 
+%% our last run.
 client_list([], Acc) -> Acc;
-client_list([ {']', _} | R], Acc) -> Acc;
+client_list([ {']', _} | _R], Acc) -> Acc;
 client_list([ {'[', _} | R], Acc) ->
 	{NewR, NewAcc} = session_list(R, []),
 	client_list(NewR, Acc++[NewAcc]).
@@ -65,6 +55,19 @@ ops_list([ {']', _} | R ], Acc) ->
 ops_list([ E | R ], Acc) ->
 	ops_list(R, Acc++[E])
 	.
+%
+%%% History Parsing
+%%% Part of the transformation from history file to list.
+%%% The input file should be in the format used by Ranadeep Biswas
+%
+
+file_to_ops(Filename) ->
+	{ok, Binary} = file:read_file(Filename),
+	{ok, C2, _} = erl_scan:string(unicode:characters_to_list(Binary)),
+	%% With a fun, because escript doesn't seem to like higer order functions
+	client_list(transform(lists:filter(fun(E) -> find(E) end, C2)))
+	.
+
 
 %% Removes unnnecessary symbols
 find({':', _}) -> false;
@@ -73,7 +76,7 @@ find({'>', _}) -> false;
 find({',', _}) -> false;
 find({'(', _}) -> false;
 find({')', _}) -> false;
-find(E) -> true.
+find(_E) -> true.
 
 %% Merges several operations into a single tuple
 transform([]) -> [];
