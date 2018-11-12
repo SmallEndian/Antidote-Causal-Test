@@ -20,6 +20,7 @@ main(Args) ->
 				       client(E) end) 
 		  end ,Content),
 
+	%% TODO: Replace this _hack_ with a monitor
 	timer:sleep(1000),
 	ok.
 
