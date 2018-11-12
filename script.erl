@@ -6,7 +6,13 @@ main(Args) ->
 	io:format("I was called with ~p ~n", [Args]),
 	[Filename] = Args,
 	Ops = file_to_ops(Filename),
+	Ops2 = split(Ops),
+	print_list(Ops2),
 	print_list(Ops),
+	io:format("~p~n", [Ops]),
+	io:format("~p~n", [Ops2]),
+	Ops3 = client_list(Ops),
+	io:format("~p~n", [Ops3]),
 
 	ok.
 
@@ -15,6 +21,49 @@ file_to_ops(Filename) ->
 	{ok, C2, _} = erl_scan:string(unicode:characters_to_list(Binary)),
 	%% With a fun, because escript doesn't seem to like higer order functions
 	transform(lists:filter(fun(E) -> find(E) end, C2))
+	.
+% Split the sessions from the list.
+split(L) -> split(L, [], []).
+split([], Acc, Cur) -> Acc++Cur;
+split([ {']', _} | R ], Acc, Cur) -> 
+	case Cur of
+		[] -> split(R, Acc, []);
+		_ ->split(R, Acc++[Cur], [])
+	end;
+split([ {'[', _} | R ], Cur,  Acc) -> 
+	case Cur of
+		[] -> split(R, Acc, []);
+		_ ->split(R, Acc++[Cur], [])
+	end;
+split([ E | R ], Acc, Cur) -> 
+	split(R, Acc, Cur++[E])
+	.
+
+%% This is not generic, but it's very simple to implement:
+%% Three levels of depth in the section: all, clients, sessions
+
+client_list([], Acc) -> Acc;
+client_list([ {']', _} | R], Acc) -> Acc;
+client_list([ {'[', _} | R], Acc) ->
+	{NewR, NewAcc} = session_list(R, []),
+	client_list(NewR, Acc++[NewAcc]).
+client_list(L) -> client_list(tl(L), []).
+
+session_list( [], Acc) -> {[], Acc};
+session_list([ {'[', _} | R], Acc) ->
+	{NewR, NewAcc } = ops_list(R, []),
+	session_list(NewR, Acc++[NewAcc] )
+	;
+session_list([ {']', _} | R], Acc) ->
+	{R, Acc}.
+
+ops_list([], Acc) ->
+	{[], Acc};
+ops_list([ {']', _} | R ], Acc) ->
+	{R, Acc}
+;
+ops_list([ E | R ], Acc) ->
+	ops_list(R, Acc++[E])
 	.
 
 %% Removes unnnecessary symbols
