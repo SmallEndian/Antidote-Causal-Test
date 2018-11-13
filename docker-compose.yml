@@ -4,6 +4,8 @@ services:
     image:          antidotedb/antidote
     container_name: antidote1
     hostname:       antidote1
+    ports:
+            - 8087:8087
     environment:
       SHORT_NAME:   "true"
       NODE_NAME:    antidote@antidote1
@@ -13,6 +15,8 @@ services:
     image:          antidotedb/antidote
     container_name: antidote2
     hostname:       antidote2
+    ports:
+            - 8088:8087
     environment:
       SHORT_NAME:   "true"
       NODE_NAME:    antidote@antidote2
@@ -22,6 +26,8 @@ services:
     image:          antidotedb/antidote
     container_name: antidote3
     hostname:       antidote3
+    ports:
+            - 8089:8087
     environment:
       SHORT_NAME:   "true"
       NODE_NAME:    antidote@antidote3
