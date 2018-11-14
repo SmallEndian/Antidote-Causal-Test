@@ -9,7 +9,7 @@
 
 %% Application callbacks
 -export([start/2, stop/1]).
--export([run/0]).
+-export([run/0, run/1]).
 
 var_x() -> {"x", antidote_crdt_register_lww, "bucket"}.
 
@@ -29,8 +29,58 @@ stop(_State) ->
 %% Internal functions
 %%====================================================================
 
-%% Write and read a value
 
+%% Si;ple example execution: Three clients execute two transactions of five operations each.
+%% The operations here have been copy and pasted, so that won't be useful for a test of causality
+example() -> [[[{'R',1,52},{'R',1,52},{'W',3,61},{'W',1,53},{'W',1,54},{'R',2,62},{'R',2,62}],
+	       [{'W',4,60},{'W',2,63},{'R',4,60},{'W',2,64},{'R',1,54},{'W',1,55},{'R',1,55}]],
+	      [[{'R',1,52},{'R',1,52},{'W',3,61},{'W',1,53},{'W',1,54},{'R',2,62},{'R',2,62}],
+	       [{'W',4,60},{'W',2,63},{'R',4,60},{'W',2,64},{'R',1,54},{'W',1,55},{'R',1,55}]],
+	      [[{'R',1,52},{'R',1,52},{'W',3,61},{'W',1,53},{'W',1,54},{'R',2,62},{'R',2,62}],
+	       [{'W',4,60},{'W',2,63},{'R',4,60},{'W',2,64},{'R',1,54},{'W',1,55},{'R',1,55}]]].
+
+%% We just hardcode the list of Antidote instances, for simplicity
+ports() -> [{{127,0,0,1}, 8087},{{127,0,0,1}, 8088},{{127,0,0,1}, 8089}].
+
+client_thread(Transactions, {Ip, Port}) ->
+	Bucket = <<"bucket">>,
+	{ok, DC_Socket} = antidotec_pb_socket:start_link(Ip, Port),
+
+	{TimeStamp , History} = lists:foldl(fun(Transaction, {TimeStamp, Old_History}) -> 
+				    {ok, TxId} = antidotec_pb:start_transaction(DC_Socket, TimeStamp, []),
+
+				    History = lists:reverse( lists:foldl(fun(Op,History ) ->
+								[execute_op(Op, Bucket, DC_Socket, TxId) | History]
+						end, [], Transaction)),
+
+				    {ok, New_TimeStamp} = antidotec_pb:commit_transaction(DC_Socket, TxId),
+				    {New_TimeStamp, [History | Old_History]}
+		    end, {ignore, []}, Transactions),
+
+
+	_Disconnected = antidotec_pb_socket:stop(DC_Socket),	
+	io:format("Client of ~p  ~p ~n", [Port, History]),
+	History.
+execute_op(Write = {'W', Key, Value}, Bucket, DC_Socket, TxId) ->
+	Register = {<<Key>>, antidote_crdt_register_lww, Bucket},
+	Ops = [{Register, assign, integer_to_binary(Value)}],
+	%io:format("My args: ~p : ~p  ~n", [Register, Ops]),
+	ok = antidotec_pb:update_objects(DC_Socket, Ops, TxId),
+	Write;
+execute_op({'R', Key, _}, Bucket, DC_Socket, TxId) ->
+	Register = {<<Key>>, antidote_crdt_register_lww, Bucket},
+	{ok, [{_,Value}]} = antidotec_pb:read_objects(DC_Socket, [Register], TxId),
+	%io:format("My args: ~p ~p ~n", [Register, Value]),
+	case Value of
+		<<>> -> % We consider that uninitialized keys contain zero
+			{'R', Key, 0};
+		_ -> {'R', Key, binary_to_integer(Value)}
+	end
+	.
+
+
+
+%% Write and read a value, without having committed the transaction and afterwads.
 test_1() ->
 	Register = {<<"a">>, antidote_crdt_register_lww, <<"bucket">>},
 	Counter_key = {"k", antidote_crdt_counter, "bucket"},
@@ -39,7 +89,7 @@ test_1() ->
 	RValue1 = [{Register, assign, <<"watabanga">>}],
 	{ok, Register_Value} = antidotec_pb:read_objects(Pid, [Register], TxId ),
 	ok = antidotec_pb:update_objects(Pid, RValue1,TxId),
-	{ok, Register_Value_2} = antidotec_pb:read_objects(Pid, [Register], TxId ),
+{ok, Register_Value_2} = antidotec_pb:read_objects(Pid, [Register], TxId ),
 	io:format("Current value: ~p ~n", [Register_Value_2]),
 	{ok, TimeStamp} = antidotec_pb:commit_transaction(Pid, TxId),
 
@@ -69,6 +119,7 @@ test_1() ->
 	_Disconnected = antidotec_pb_socket:stop(Pid),	
 	ok.
 
+% test function
 update_reg_test() ->
     Bucket = <<"bket">>,
     Key = <<"pb_client_SUITE_update_reg_test">>,
@@ -97,7 +148,10 @@ update_reg_test() ->
 %% External functions
 %%====================================================================
 
+run(Filename) ->
+	Operations = history_parser:parse(Filename),
+	lists:map( fun({T, DC_Addr}) -> client_thread(T, DC_Addr) end,
+		   lists:zip(Operations, ports())).
 run() ->
-	io:format("Hello world~n"),
-	test_1(),
-	c:q().
+	lists:map( fun({T, DC_Addr}) -> client_thread(T, DC_Addr) end,
+		   lists:zip(example(), ports())).
