@@ -1,3 +1,6 @@
+-module(client_app).
+
+-export([main/1]).
 #!/usr/bin/env escript
 %%! -smp enable -sname erlshell -setcookie antidote
 
@@ -22,6 +25,7 @@ main(Args) ->
 
 	%% TODO: Replace this _hack_ with a monitor
 	timer:sleep(1000),
+	io:format("~p~n", [Content]),
 	ok.
 
 %%%% Client

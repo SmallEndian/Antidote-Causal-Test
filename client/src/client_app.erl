@@ -4,12 +4,13 @@
 %%%-------------------------------------------------------------------
 
 -module(client_app).
+-author("Jonathan Sid-Otmane <Jonathan.SidOtmane@gmail.com>"). 
 
 -behaviour(application).
 
 %% Application callbacks
 -export([start/2, stop/1]).
--export([run/0, run/1]).
+-export([run/0, run/1, run/2]).
 
 var_x() -> {"x", antidote_crdt_register_lww, "bucket"}.
 
@@ -147,6 +148,24 @@ update_reg_test() ->
 %%====================================================================
 %% External functions
 %%====================================================================
+
+run(Filename, OutputFile) ->
+	{ok, File} = file:open(OutputFile, write),
+	io:fwrite(File, "[", [] ),
+	lists:map(fun(Session) ->
+				  io:fwrite(File, "~n[", [] ),
+				  lists:map(fun(Transaction) ->
+										       io:fwrite(File, "~n[", []),
+							    lists:map( fun({Op, Var, Val}) ->
+										       io:fwrite(File, "<~p(~p):~p>,", [Op, Var, Val])
+								       end, Transaction),
+										       io:fwrite(File, "\b],", [])
+					    end, Session),
+				  io:fwrite(File, "\b~n],", [] )
+		  end,
+		  run(Filename)),
+	io:fwrite(File, "\b~n]~n", [] ),
+	file:close(File).
 
 run(Filename) ->
 	Operations = history_parser:parse(Filename),

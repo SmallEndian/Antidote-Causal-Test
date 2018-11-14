@@ -1,6 +1,8 @@
 -module(history_parser).
+-author("Jonathan Sid-Otmane <Jonathan.SidOtmane@gmail.com>"). 
 
 -export([main/1, print_list/1, parse/1]).
+
 
 
 %%====================================================================
