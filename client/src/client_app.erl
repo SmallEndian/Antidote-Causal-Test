@@ -169,8 +169,19 @@ run(Filename, OutputFile) ->
 
 run(Filename) ->
 	Operations = history_parser:parse(Filename),
-	lists:map( fun({T, DC_Addr}) -> client_thread(T, DC_Addr) end,
-		   lists:zip(Operations, ports())).
+	Parent = self(),
+
+	Children = lists:map( fun({T, DC_Addr}) -> 
+				   spawn( fun()-> 
+							  Parent ! {finished, client_thread(T, DC_Addr)}
+					  end)
+		   end,
+		   lists:zip(Operations, ports())),
+	Resultst = lists:map(fun(_) ->
+
+					     % We only count on receiving our result
+					     receive {finished, E} -> E end
+			     end, Children).
 run() ->
 	lists:map( fun({T, DC_Addr}) -> client_thread(T, DC_Addr) end,
 		   lists:zip(example(), ports())).
