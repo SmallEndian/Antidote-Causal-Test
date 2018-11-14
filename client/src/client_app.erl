@@ -60,7 +60,7 @@ client_thread(Transactions, {Ip, Port}) ->
 
 
 	_Disconnected = antidotec_pb_socket:stop(DC_Socket),	
-	io:format("Client of ~p  ~p ~n", [Port, History]),
+	%io:format("Client of ~p  ~p ~n", [Port, History]),
 	History.
 execute_op(Write = {'W', Key, Value}, Bucket, DC_Socket, TxId) ->
 	Register = {<<Key>>, antidote_crdt_register_lww, Bucket},
@@ -177,11 +177,13 @@ run(Filename) ->
 					  end)
 		   end,
 		   lists:zip(Operations, ports())),
-	Resultst = lists:map(fun(_) ->
+	Results = lists:map(fun(_) ->
 
 					     % We only count on receiving our result
 					     receive {finished, E} -> E end
-			     end, Children).
+			     end, Children),
+	io:format("~n"), % cleans the output
+	Results.
 run() ->
 	lists:map( fun({T, DC_Addr}) -> client_thread(T, DC_Addr) end,
 		   lists:zip(example(), ports())).
