@@ -152,11 +152,11 @@ update_reg_test() ->
 run(Filename, OutputFile) ->
 	{ok, File} = file:open(OutputFile, write),
 	io:fwrite(File, "[", [] ),
-	lists:map(fun(Session) ->
+	lists:foreach(fun(Session) ->
 				  io:fwrite(File, "~n[", [] ),
-				  lists:map(fun(Transaction) ->
+				  lists:foreach(fun(Transaction) ->
 										       io:fwrite(File, "~n[", []),
-							    lists:map( fun({Op, Var, Val}) ->
+							    lists:foreach( fun({Op, Var, Val}) ->
 										       io:fwrite(File, "<~p(~p):~p>,", [Op, Var, Val])
 								       end, Transaction),
 										       io:fwrite(File, "\b],", [])
@@ -183,7 +183,7 @@ run(Filename) ->
 					     receive {finished, E} -> E end
 			     end, Children),
 	io:format("~n"), % cleans the output
-	Results.
+	lists:map(fun(Session) -> lists:reverse(Session) end, Results).
 run() ->
 	lists:map( fun({T, DC_Addr}) -> client_thread(T, DC_Addr) end,
 		   lists:zip(example(), ports())).
