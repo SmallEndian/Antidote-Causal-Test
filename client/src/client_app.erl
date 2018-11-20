@@ -43,7 +43,7 @@ example() -> [[[{'R',1,52},{'R',1,52},{'W',3,61},{'W',1,53},{'W',1,54},{'R',2,62
 %% We just hardcode the list of Antidote instances, for simplicity
 ports() -> [{{127,0,0,1}, 8087},{{127,0,0,1}, 8088},{{127,0,0,1}, 8089}].
 
-client_thread(Transactions, {Ip, Port}) ->
+client_thread(Transactions, {Ip, Port}, InitTimeStamp) ->
 	Bucket = <<"bucket">>,
 	{ok, DC_Socket} = antidotec_pb_socket:start_link(Ip, Port),
 
@@ -56,7 +56,7 @@ client_thread(Transactions, {Ip, Port}) ->
 
 				    {ok, New_TimeStamp} = antidotec_pb:commit_transaction(DC_Socket, TxId),
 				    {New_TimeStamp, [History | Old_History]}
-		    end, {ignore, []}, Transactions),
+		    end, {InitTimeStamp, []}, Transactions),
 
 
 	_Disconnected = antidotec_pb_socket:stop(DC_Socket),	
@@ -170,10 +170,36 @@ run(Filename, OutputFile) ->
 run(Filename) ->
 	Operations = history_parser:parse(Filename),
 	Parent = self(),
+  
+  Variables = sets:to_list(sets:from_list(lists:flatmap(fun(S) -> 
+    lists:flatmap(fun(T) -> 
+      lists:map(fun({Op, Var, Val}) -> 
+        Var
+      end, T)
+    end, S)
+  end, Operations))),
+    
+  io:fwrite("var ~w~n", [Variables]),
+  
+  {Ip, Port} = lists:last(ports()),
+  
+  {ok, DC_Socket} = antidotec_pb_socket:start_link(Ip, Port),
+  
+  {ok, TxId} = antidotec_pb:start_transaction(DC_Socket, ignore, []),
+  
+  History = lists:map(fun(Var) ->
+      Op = {'W',Var,0},
+      Bucket = <<"bucket">>,
+      execute_op(Op, Bucket, DC_Socket, TxId)
+  end, Variables),
+  
+  {ok, InitTimeStamp} = antidotec_pb:commit_transaction(DC_Socket, TxId),
 
+  io:fwrite("flooded with zero", []),
+    
 	Children = lists:map( fun({T, DC_Addr}) -> 
 				   spawn( fun()-> 
-							  Parent ! {finished, client_thread(T, DC_Addr)}
+							  Parent ! {finished, client_thread(T, DC_Addr, InitTimeStamp)}
 					  end)
 		   end,
 		   lists:zip(Operations, ports())),
@@ -185,5 +211,5 @@ run(Filename) ->
 	io:format("~n"), % cleans the output
 	Results.
 run() ->
-	lists:map( fun({T, DC_Addr}) -> client_thread(T, DC_Addr) end,
+	lists:map( fun({T, DC_Addr}) -> client_thread(T, DC_Addr, ignore) end,
 		   lists:zip(example(), ports())).
