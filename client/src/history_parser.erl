@@ -32,7 +32,7 @@ main(Args) ->
 	lists:map(fun(E) -> 
 		 spawn(fun() -> 
 				       client(E) end) 
-		  end ,Content),
+			  end, Content),
 
 	%% TODO: Replace this _hack_ with a monitor
 	timer:sleep(1000),
@@ -40,7 +40,11 @@ main(Args) ->
 	ok.
 
 parse(Filename) ->
-	file_to_ops(Filename).
+		All_Ops = file_to_ops(Filename),
+		First = first_transaction(All_Ops),
+		lists:map(fun(Client_Session) -> [First]++Client_Session end,
+				  All_Ops)
+		.
 %%====================================================================
 %%  Parse Functions
 %%====================================================================
@@ -99,3 +103,11 @@ find(_E) -> true.
 transform([]) -> [];
 transform([ {var, _, Op},{integer, _, Var},{integer, _, Val}  |R] ) ->  [ {Op, Var, Val} | transform(R) ] ;
 transform([E | R]) -> [E | transform(R)].
+
+%% In order to init everything at zero, extract all variables names from script
+%% This is to be the universal first transaction
+first_transaction(List) ->
+		lists:map(fun(VarName) -> {'W', VarName, 0} end,
+				  lists:usort(lists:map(fun({_, VarName, _}) -> VarName end,
+										lists:flatten(List))))
+		.
