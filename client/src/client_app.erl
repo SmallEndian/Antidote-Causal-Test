@@ -83,35 +83,35 @@ execute_op({'R', Key, _}, Bucket, DC_Socket, TxId) ->
 
 %% Write and read a value, without having committed the transaction and afterwads.
 test_1() ->
-	Register = {<<"a">>, antidote_crdt_register_lww, <<"bucket">>},
-	Counter_key = {"k", antidote_crdt_counter, "bucket"},
-	{ok, Pid} = antidotec_pb_socket:start_link({127,0,0,1}, 8087),
-	{ok, TxId} =  antidotec_pb:start_transaction(Pid, ignore, []),
-	RValue1 = [{Register, assign, <<"watabanga">>}],
-	{ok, Register_Value} = antidotec_pb:read_objects(Pid, [Register], TxId ),
-	ok = antidotec_pb:update_objects(Pid, RValue1,TxId),
-{ok, Register_Value_2} = antidotec_pb:read_objects(Pid, [Register], TxId ),
-	io:format("Current value: ~p ~n", [Register_Value_2]),
-	{ok, TimeStamp} = antidotec_pb:commit_transaction(Pid, TxId),
+		Register = {<<"a">>, antidote_crdt_register_lww, <<"bucket">>},
+		Counter_key = {"k", antidote_crdt_counter, "bucket"},
+		{ok, Pid} = antidotec_pb_socket:start_link({127,0,0,1}, 8087),
+		{ok, TxId} =  antidotec_pb:start_transaction(Pid, ignore, []),
+		RValue1 = [{Register, assign, <<"watabanga">>}],
+		{ok, Register_Value} = antidotec_pb:read_objects(Pid, [Register], TxId ),
+		ok = antidotec_pb:update_objects(Pid, RValue1,TxId),
+		{ok, Register_Value_2} = antidotec_pb:read_objects(Pid, [Register], TxId ),
+		io:format("Current value: ~p ~n", [Register_Value_2]),
+		{ok, TimeStamp} = antidotec_pb:commit_transaction(Pid, TxId),
 
 
-	{ok, Tx2} =  antidotec_pb:start_transaction(Pid, TimeStamp, []),
-	{ok, Register_Value_3} = antidotec_pb:read_objects(Pid, [Register], Tx2 ),
-	io:format("Current value 2: ~p ~n", [Register_Value_3]),
-	{ok, TimeStamp2} = antidotec_pb:commit_transaction(Pid, Tx2),
+		{ok, Tx2} =  antidotec_pb:start_transaction(Pid, TimeStamp, []),
+		{ok, Register_Value_3} = antidotec_pb:read_objects(Pid, [Register], Tx2 ),
+		io:format("Current value 2: ~p ~n", [Register_Value_3]),
+		{ok, TimeStamp2} = antidotec_pb:commit_transaction(Pid, Tx2),
 
 
-	{ok, Tx3} =  antidotec_pb:start_transaction(Pid, ignore, []),
-	{ok, Counter_Value} = antidotec_pb:read_objects(Pid, [Counter_key], Tx3 ),
-	io:format("Current value 2: ~p ~n", [Counter_Value]),
-	{ok, TimeStamp2} = antidotec_pb:commit_transaction(Pid, Tx3),
-	
-	
+		{ok, Tx3} =  antidotec_pb:start_transaction(Pid, ignore, []),
+		{ok, Counter_Value} = antidotec_pb:read_objects(Pid, [Counter_key], Tx3 ),
+		io:format("Current value 2: ~p ~n", [Counter_Value]),
+		{ok, TimeStamp2} = antidotec_pb:commit_transaction(Pid, Tx3),
 
-	% no start transactions
-%	{ok, TxId} = rpc:call(Pid, antidote, start_transaction, [ignore, []]),
-	% {ok, TxId} =antidotec_pb_socket:start_transaction(Pid,ignore),
-	%{ok, [Register]}  = rpc:call(Pid, antidote, read_objects, [[Register], TxId]),
+
+
+		% no start transactions
+		%	{ok, TxId} = rpc:call(Pid, antidote, start_transaction, [ignore, []]),
+		% {ok, TxId} =antidotec_pb_socket:start_transaction(Pid,ignore),
+		%{ok, [Register]}  = rpc:call(Pid, antidote, read_objects, [[Register], TxId]),
 
 	%{ok, [CounterVal]} = rpc:call(Node, antidote, read_objects, [[CounterObj], TxId]),
 	%{assign, term()}.
@@ -119,6 +119,24 @@ test_1() ->
 	%ok = rpc:call(Pid, antidote, update_objects, [[{Register, assign, 150}], TxId]),
 	_Disconnected = antidotec_pb_socket:stop(Pid),	
 	ok.
+
+test_timestamp_across_dcs()->
+		Register = {<<"a">>, antidote_crdt_register_lww, <<"bucket">>},
+		lists:foldl(fun({Ip, Port}, TimeStamp) ->
+									io:format("[~p,~p, ~p]~n", [Ip, Port, TimeStamp]),
+
+									{ok, Pid} = antidotec_pb_socket:start_link(Ip, Port),
+									{ok, TxId} =  antidotec_pb:start_transaction(Pid, TimeStamp, []),
+									RValue1 = [{Register, assign, <<Port>>}],
+									{ok, Register_Value} = antidotec_pb:read_objects(Pid, [Register], TxId ),
+									ok = antidotec_pb:update_objects(Pid, RValue1,TxId),
+									{ok, Register_Value_2} = antidotec_pb:read_objects(Pid, [Register], TxId ),
+									io:format("Values: ~p -> ~p ~n", [Register_Value, Register_Value_2]),
+									{ok, NewTimeStamp} = antidotec_pb:commit_transaction(Pid, TxId),
+									_Disconnected = antidotec_pb_socket:stop(Pid),	
+									NewTimeStamp
+					end, ignore, ports())
+		.
 
 % test function
 update_reg_test() ->
