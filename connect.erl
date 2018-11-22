@@ -1,16 +1,13 @@
 #!/usr/bin/env escript
 %%! -smp enable -sname erlshell -setcookie antidote
 
+names(Num) when Num > 0 -> [list_to_atom(lists:flatten(io_lib:format("antidote@antidote~w", [Num]))) | names(Num - 1)];
+names(_) -> [].
 
 main(_) ->
-		rpc:call(antidote@antidote1, inter_dc_manager, start_bg_processes, [stable]),
-		rpc:call(antidote@antidote2, inter_dc_manager, start_bg_processes, [stable]),
-		rpc:call(antidote@antidote3, inter_dc_manager, start_bg_processes, [stable]),
-		{ok, Desc1} = rpc:call(antidote@antidote1, inter_dc_manager, get_descriptor, []),
-		{ok, Desc2} = rpc:call(antidote@antidote2, inter_dc_manager, get_descriptor, []),
-		{ok, Desc3} = rpc:call(antidote@antidote3, inter_dc_manager, get_descriptor, []),
-		Descriptors = [Desc1, Desc2, Desc3],
-		rpc:call(antidote@antidote1, inter_dc_manager, observe_dcs_sync, [Descriptors]),
-		rpc:call(antidote@antidote2, inter_dc_manager, observe_dcs_sync, [Descriptors]),
-		rpc:call(antidote@antidote3, inter_dc_manager, observe_dcs_sync, [Descriptors]),
-		io:format("Connection setup!~n").
+  NumDC = 3,
+  DCs = names(NumDC),
+  lists:foreach(fun(DC) -> rpc:call(DC, inter_dc_manager, start_bg_processes, [stable]) end, DCs),
+  Descriptors = lists:map(fun(DC) -> {ok, Desc} = rpc:call(DC, inter_dc_manager, get_descriptor, []), Desc end, DCs),
+  lists:foreach(fun(DC) -> rpc:call(DC, inter_dc_manager, observe_dcs_sync, [Descriptors]) end, DCs),
+  io:fwrite("AntidoteDB: cluster setup for ~w datacenters!~n", [NumDC]).
