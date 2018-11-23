@@ -151,20 +151,18 @@ update_reg_test() ->
 
 run(Filename, OutputFile) ->
 	{ok, File} = file:open(OutputFile, write),
-	io:fwrite(File, "[", [] ),
-	lists:map(fun(Session) ->
-				  io:fwrite(File, "~n[", [] ),
-				  lists:map(fun(Transaction) ->
-										       io:fwrite(File, "~n[", []),
-							    lists:map( fun({Op, Var, Val}) ->
-										       io:fwrite(File, "<~p(~p):~p>,", [Op, Var, Val])
+  History = run(Filename),
+	Sessions = lists:map(fun(Session) ->
+				  Transactions = lists:map(fun(Transaction) ->
+							    Ops = lists:map( fun({Op, Var, Val}) ->
+										       io_lib:fwrite("<~s(~p):~p>", [Op, Var, Val])
 								       end, Transaction),
-										       io:fwrite(File, "\b],", [])
+                  io_lib:fwrite("[~s]",[lists:join(",", Ops)])
 					    end, Session),
-				  io:fwrite(File, "\b~n],", [] )
+          io_lib:fwrite("[~n~s~n]",[lists:join(",\n", Transactions)])
 		  end,
-		  run(Filename)),
-	io:fwrite(File, "\b~n]~n", [] ),
+		  History),
+  io:fwrite(File, "[~n~s~n]",[lists:join(",\n", Sessions)]),
 	file:close(File).
 
 run(Filename) ->
