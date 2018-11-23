@@ -11,6 +11,7 @@
 %% Application callbacks
 -export([start/2, stop/1]).
 -export([run/0, run/1, run/2]).
+-export([multi_run/2]).
 
 var_x() -> {"x", antidote_crdt_register_lww, "bucket"}.
 
@@ -211,3 +212,12 @@ run(Filename) ->
 run() ->
 	lists:map( fun({T, DC_Addr}) -> client_thread(T, DC_Addr, ignore) end,
 		   lists:zip(example(), ports())).
+     
+multi_run(Directory, Num) ->
+  if
+    Num > 0 ->
+      Outfile = io_lib:fwrite("execs/hist-~4..0B.txt", [Num]),
+      run("non-cc-antidote.txt", Outfile),
+      multi_run(Directory, Num - 1);
+    true -> ok
+  end.
