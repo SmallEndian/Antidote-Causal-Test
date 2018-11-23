@@ -61,7 +61,7 @@ client_thread(Transactions, {Ip, Port}, InitTimeStamp) ->
 
 	_Disconnected = antidotec_pb_socket:stop(DC_Socket),	
 	%io:format("Client of ~p  ~p ~n", [Port, History]),
-	History.
+	lists:reverse(History).
 execute_op(Write = {'W', Key, Value}, Bucket, DC_Socket, TxId) ->
 	Register = {<<Key>>, antidote_crdt_register_lww, Bucket},
 	Ops = [{Register, assign, integer_to_binary(Value)}],
