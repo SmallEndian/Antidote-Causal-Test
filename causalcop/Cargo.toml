@@ -1,0 +1,9 @@
+[package]
+name = "causalcop"
+version = "0.1.0"
+authors = ["Ranadeep Biswas <ranadip.bswas@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+nom = "*"
+fnv = "*"
