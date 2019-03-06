@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate nom;
-extern crate fnv;
+extern crate hashbrown;
 
 pub mod closure;
 pub mod history;
@@ -14,8 +14,8 @@ use verifier::CausalConsistency;
 
 use parser::parse_history;
 
-type Map<K, V> = fnv::FnvHashMap<K, V>;
-type Set<T> = fnv::FnvHashSet<T>;
+type Map<K, V> = hashbrown::HashMap<K, V>;
+type Set<T> = hashbrown::HashSet<T>;
 
 // type Map<K, V> = std::collections::HashMap<K, V>;
 // type Set<T> = std::collections::HashSet<T>;
