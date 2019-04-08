@@ -11,6 +11,7 @@
 %% Application callbacks
 -export([start/2, stop/1]).
 -export([run/0, run/1, run/2]).
+-compile([nowarn_unused_function]).
 
 var_x() -> {"x", antidote_crdt_register_lww, "bucket"}.
 
@@ -47,7 +48,7 @@ client_thread(Transactions, {Ip, Port}) ->
 	Bucket = <<"bucket">>,
 	{ok, DC_Socket} = antidotec_pb_socket:start_link(Ip, Port),
 
-	{TimeStamp , History} = lists:foldl(fun(Transaction, {TimeStamp, Old_History}) -> 
+	{_TimeStamp , History} = lists:foldl(fun(Transaction, {TimeStamp, Old_History}) -> 
 				    {ok, TxId} = antidotec_pb:start_transaction(DC_Socket, TimeStamp, []),
 
 				    History = lists:reverse( lists:foldl(fun(Op,History ) ->
@@ -88,7 +89,7 @@ test_1() ->
 	{ok, Pid} = antidotec_pb_socket:start_link({127,0,0,1}, 8087),
 	{ok, TxId} =  antidotec_pb:start_transaction(Pid, ignore, []),
 	RValue1 = [{Register, assign, <<"watabanga">>}],
-	{ok, Register_Value} = antidotec_pb:read_objects(Pid, [Register], TxId ),
+	{ok, _Register_Value} = antidotec_pb:read_objects(Pid, [Register], TxId ),
 	ok = antidotec_pb:update_objects(Pid, RValue1,TxId),
 {ok, Register_Value_2} = antidotec_pb:read_objects(Pid, [Register], TxId ),
 	io:format("Current value: ~p ~n", [Register_Value_2]),

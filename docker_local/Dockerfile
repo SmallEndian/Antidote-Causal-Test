@@ -1,4 +1,4 @@
-FROM erlang:19
+FROM erlang:21
 
 ENV HANDOFF_PORT "8099"
 ENV PB_PORT "8087"
@@ -9,23 +9,21 @@ ENV RING_STATE_DIR "data/ring"
 ENV PLATFORM_DATA_DIR "data"
 ENV NODE_NAME "antidote@127.0.0.1"
 ENV SHORT_NAME "false"
-ENV ANTIDOTE_REPO "https://github.com/SyncFree/antidote.git"
+ENV ANTIDOTE_REPO "https://github.com/AntidoteDB/antidote.git"
 ENV ANTIDOTE_BRANCH "master"
 
 RUN set -xe \
   && apt-get update \
   && apt-get install -y --no-install-recommends git openssl ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+  && cd /usr/src 
 
-ADD ./antidote /src/antidote
+ADD ./antidote /usr/src/antidote
 
-RUN  cd /usr/src \
-  && git clone /src/antidote \
-  && cd antidote \
-  && git checkout $ANTIDOTE_BRANCH \
+RUN cd /usr/src/antidote \
   && make rel \
   && cp -R _build/default/rel/antidote /opt/ \
-  && sed -e '$i,{kernel, [{inet_dist_listen_min, 9100}, {inet_dist_listen_max, 9100}]}' /usr/src/antidote/_build/default/rel/antidote/releases/0.0.1/sys.config > /opt/antidote/releases/0.0.1/sys.config 
+  && sed -e '$i,{kernel, [{inet_dist_listen_min, 9100}, {inet_dist_listen_max, 9100}]}' /usr/src/antidote/_build/default/rel/antidote/releases/0.0.2/sys.config > /opt/antidote/releases/0.0.2/sys.config \
+  && rm -rf /usr/src/antidote /var/lib/apt/lists/*
 
 ADD ./start_and_attach.sh /opt/antidote/
 ADD ./entrypoint.sh /
@@ -46,3 +44,4 @@ VOLUME /opt/antidote/data
 ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["/opt/antidote/start_and_attach.sh"]
+

@@ -1,4 +1,4 @@
-Using Antidot test utils
+# Using Antidote test utils
 
 To set up a multi DC test environnement I need:
 
@@ -8,7 +8,7 @@ Config is empty at first, when init per SUITE is called.
 
 Here's what the config looks like: (in the multiple DC node failure)
 
-'''erlang
+```erlang
 [{clusters,[[dev1@3b80f79a90bc,dev2@3b80f79a90bc],
                 [dev3@3b80f79a90bc],
                 [dev4@3b80f79a90bc]]},
@@ -19,19 +19,18 @@ Here's what the config looks like: (in the multiple DC node failure)
      {tc_group_path,[]},
      {data_dir,"/src/antidote/test/multidc/multiple_dcs_node_failure_SUITE_data/"},
      {priv_dir,"/src/antidote/logs/ct_run.ct@3b80f79a90bc.2018-11-12_17.10.35/test.multidc.logs/run.2018-11-12_17.10.39/log_private/"}]
-'''
+```
 
 Here's mine:
 
-'''erlang
+```erlang
   [{watchdog,<0.1004.0>},
      {tc_logfile,"/src/antidote/logs/ct_run.ct@3b80f79a90bc.2018-11-12_17.10.35/test.multidc.logs/run.2018-11-12_17.10.39/causality_suite.append_failure_test.html"},
      {tc_group_properties,[{suite,causality_SUITE}]},
      {tc_group_path,[]},
      {data_dir,"/src/antidote/test/multidc/causality_SUITE_data/"},
      {priv_dir,"/src/antidote/logs/ct_run.ct@3b80f79a90bc.2018-11-12_17.10.35/test.multidc.logs/run.2018-11-12_17.10.39/log_private/"}]
-
-'''
+```
 
 
 DCs setup

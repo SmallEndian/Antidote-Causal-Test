@@ -1,0 +1,32 @@
+2019/04/08-16:01:02.501322 7ff734bf7700                        Version: 2.0.19
+2019/04/08-16:01:02.501347 7ff734bf7700             Options.comparator: leveldb.InternalKeyComparator
+2019/04/08-16:01:02.501351 7ff734bf7700      Options.create_if_missing: 1
+2019/04/08-16:01:02.501354 7ff734bf7700        Options.error_if_exists: 0
+2019/04/08-16:01:02.501357 7ff734bf7700        Options.paranoid_checks: 0
+2019/04/08-16:01:02.501360 7ff734bf7700     Options.verify_compactions: 1
+2019/04/08-16:01:02.501362 7ff734bf7700                    Options.env: 0x7ff790002960
+2019/04/08-16:01:02.501365 7ff734bf7700               Options.info_log: 0x7ff70c002be0
+2019/04/08-16:01:02.501368 7ff734bf7700      Options.write_buffer_size: 11891324
+2019/04/08-16:01:02.501371 7ff734bf7700         Options.max_open_files: 1000
+2019/04/08-16:01:02.501374 7ff734bf7700            Options.block_cache: 0x7ff70c001c10
+2019/04/08-16:01:02.501376 7ff734bf7700             Options.block_size: 4096
+2019/04/08-16:01:02.501379 7ff734bf7700       Options.block_size_steps: 16
+2019/04/08-16:01:02.501382 7ff734bf7700 Options.block_restart_interval: 16
+2019/04/08-16:01:02.501385 7ff734bf7700            Options.compression: 1
+2019/04/08-16:01:02.501388 7ff734bf7700          Options.filter_policy: leveldb.BuiltinBloomFilter2
+2019/04/08-16:01:02.501391 7ff734bf7700              Options.is_repair: false
+2019/04/08-16:01:02.501394 7ff734bf7700         Options.is_internal_db: true
+2019/04/08-16:01:02.501396 7ff734bf7700      Options.total_leveldb_mem: 2505015705
+2019/04/08-16:01:02.501399 7ff734bf7700  Options.block_cache_threshold: 33554432
+2019/04/08-16:01:02.501402 7ff734bf7700  Options.limited_developer_mem: false
+2019/04/08-16:01:02.501405 7ff734bf7700              Options.mmap_size: 0
+2019/04/08-16:01:02.501408 7ff734bf7700       Options.delete_threshold: 1000
+2019/04/08-16:01:02.501410 7ff734bf7700       Options.fadvise_willneed: false
+2019/04/08-16:01:02.501413 7ff734bf7700      Options.tiered_slow_level: 0
+2019/04/08-16:01:02.501416 7ff734bf7700     Options.tiered_fast_prefix: ${PLATFORM_DATA_DIR}/cluster_meta/trees
+2019/04/08-16:01:02.501419 7ff734bf7700     Options.tiered_slow_prefix: ${PLATFORM_DATA_DIR}/cluster_meta/trees
+2019/04/08-16:01:02.501422 7ff734bf7700                         crc32c: hardware
+2019/04/08-16:01:02.501424 7ff734bf7700   Options.cache_object_warming: true
+2019/04/08-16:01:02.501427 7ff734bf7700                File cache size: 467191697
+2019/04/08-16:01:02.501430 7ff734bf7700               Block cache size: 469288849
+2019/04/08-16:01:02.536072 7ff734bf7700 Delete type=3 #1
