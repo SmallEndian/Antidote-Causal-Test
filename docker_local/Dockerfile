@@ -19,8 +19,11 @@ RUN set -xe \
 
 ADD ./antidote /usr/src/antidote
 
+## So as to get more meaningful error messages
 RUN cd /usr/src/antidote \
-  && make rel \
+  && make rel 
+
+RUN cd /usr/src/antidote \
   && cp -R _build/default/rel/antidote /opt/ \
   && sed -e '$i,{kernel, [{inet_dist_listen_min, 9100}, {inet_dist_listen_max, 9100}]}' /usr/src/antidote/_build/default/rel/antidote/releases/0.0.2/sys.config > /opt/antidote/releases/0.0.2/sys.config \
   && rm -rf /usr/src/antidote /var/lib/apt/lists/*
